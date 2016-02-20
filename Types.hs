@@ -1,5 +1,7 @@
 module Types where
 
+-- 0 - ghci -fwarn-incomplete-patterns / ghci -Wall (more strict)
+
 -- 1 - Type inference - look Ma, no type signature!
 calculateTax amount taxRate = amount * taxRate
 
@@ -64,7 +66,7 @@ fromViewed invoice = case (paid invoice) of
                           False -> invoice
 
 --Found a limitation in GHC!
---invalidTransition = fromIssued ViewedInvoice { paid=True }
+-- invalidTransition = fromIssued ViewedInvoice { paid=True }
 
 runMachine transition invoice = case (transition invoice) of
                                      PaidInvoice -> PaidInvoice
@@ -74,13 +76,14 @@ invoiceTransition invoice = case invoice of
                                  IssuedInvoice i  -> fromIssued invoice
                                  EmailedInvoice i -> fromEmailed invoice
                                  ViewedInvoice i  -> fromViewed invoice
+                                 --Commented out to show non-exhaustive pattern matching - PaidInvoice      -> PaidInvoice
 
 -- PBT example - made possible by types!
 
 calculateInvoiceTax :: Invoice -> Float
-calculateInvoiceTax invoice = 42 --TODO: show how the compiler forces pattern matching on every type
+calculateInvoiceTax invoice = 42
 
--- Type inference allows you to do domain design with very little friction
+-- Conclusion: Type inference allows you to do domain design with very little friction
 
 -- TODO: Show how type signature describes behavior AND enforces correctness
 
