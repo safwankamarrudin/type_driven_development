@@ -35,17 +35,19 @@ data Customer = Customer {
 --data Maybe a = Nothing | Just a
 
 -- Look Ma, no NPE!
-isKey a b = case (lookup a b) of
-                 Nothing -> False
-                 Just x  -> True
+isKey key dict = case (lookup key dict) of
+                      Nothing -> False
+                      Just x  -> True
 
 -- Recursive sum type
 data List a = Empty | Cons a (List a)
 
+-- There are other types, like unit, etc, but we're not gonna talk about them today. Look them up.
+
 -- Domain modeling - on to something dear to us...
-data Invoice = IssuedInvoice { emailed :: Bool }
+data Invoice = IssuedInvoice    { emailed :: Bool }
                | EmailedInvoice { viewed :: Bool }
-               | ViewedInvoice { paid :: Bool }
+               | ViewedInvoice  { paid :: Bool }
                | PaidInvoice
                deriving (Eq, Ord, Show)
 
@@ -64,11 +66,14 @@ fromViewed invoice = case (paid invoice) of
 --Found a limitation in GHC!
 --invalidTransition = fromIssued ViewedInvoice { paid=True }
 
-transition invoice = case invoice of
-                          IssuedInvoice i  -> fromIssued invoice
-                          EmailedInvoice i -> fromEmailed invoice
-                          ViewedInvoice i  -> fromViewed invoice
+runMachine transition invoice = case (transition invoice) of
+                                     PaidInvoice -> PaidInvoice
+                                     _           -> runMachine transition invoice
 
+invoiceTransition invoice = case invoice of
+                                 IssuedInvoice i  -> fromIssued invoice
+                                 EmailedInvoice i -> fromEmailed invoice
+                                 ViewedInvoice i  -> fromViewed invoice
 
 -- PBT example - made possible by types!
 
