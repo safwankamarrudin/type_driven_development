@@ -50,36 +50,30 @@ data List a = Empty | Cons a (List a)
 -- Start with the enumeration
 -- Then add the record types and typeclasses
 data Invoice = IssuedInvoice    { emailed :: Bool }
-               | EmailedInvoice { viewed :: Bool }
-               | ViewedInvoice  { paid :: Bool }
+               | EmailedInvoice { viewed  :: Bool }
+               | ViewedInvoice  { paid    :: Bool }
                | PaidInvoice
                deriving (Eq, Ord, Show)
 
-fromIssued invoice = case (emailed invoice) of
-                          True  -> EmailedInvoice { viewed=False }
-                          False -> invoice
+-- Dependency injection the functional way!
+runMachine trans invoice = case (trans invoice) of
+                                PaidInvoice -> PaidInvoice
+                                _           -> runMachine trans invoice
 
-fromEmailed invoice = case (viewed invoice) of
-                           True  -> ViewedInvoice { paid=False }
-                           False -> invoice
-
-fromViewed invoice = case (paid invoice) of
-                          True  -> PaidInvoice
-                          False -> invoice
+transition invoice@(IssuedInvoice emailed) = case emailed of
+                                                  True  -> EmailedInvoice { viewed=False }
+                                                  False -> invoice
+transition invoice@(EmailedInvoice viewed) = case viewed of
+                                                  True  -> ViewedInvoice { paid=False }
+                                                  False -> invoice
+transition invoice@(ViewedInvoice paid) = case paid of
+                                               True  -> PaidInvoice
+                                               False -> invoice
+-- Commented out to show non-exhaustive pattern matching
+-- transition PaidInvoice = PaidInvoice
 
 --Found a limitation in GHC!
 -- invalidTransition = fromIssued ViewedInvoice { paid=True }
-
--- Dependency injection the functional way!
-runMachine transition invoice = case (transition invoice) of
-                                     PaidInvoice -> PaidInvoice
-                                     _           -> runMachine transition invoice
-
-invoiceTransition invoice = case invoice of
-                                 IssuedInvoice _  -> fromIssued invoice
-                                 EmailedInvoice _ -> fromEmailed invoice
-                                 ViewedInvoice _  -> fromViewed invoice
-                                 --Commented out to show non-exhaustive pattern matching - PaidInvoice      -> PaidInvoice
 
 -- TODO: PBT example - made possible by types!
 
