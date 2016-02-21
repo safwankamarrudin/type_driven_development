@@ -1,4 +1,10 @@
+{-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 module Types where
+
+import Test.QuickCheck
+import Data.DeriveTH
 
 -- 0 - ghci -fwarn-incomplete-patterns / ghci -Wall (more strict)
 
@@ -27,10 +33,11 @@ calculateTaxWithTypes amount taxRate = amount * taxRate
 
 -- Product type
 data Customer = Customer {
-  firstName :: String,
-  lastName  :: String,
-  age       :: Int,
-  netWorth  :: Float
+  firstName  :: String,
+  lastName   :: String,
+  age        :: Int,
+  netWorth   :: Float,
+  likesTrump :: Bool
 }
 
 -- Sum type
@@ -69,16 +76,16 @@ transition invoice@(EmailedInvoice viewed) = case viewed of
 transition invoice@(ViewedInvoice paid) = case paid of
                                                True  -> PaidInvoice
                                                False -> invoice
--- Commented out to show non-exhaustive pattern matching
 -- transition PaidInvoice = PaidInvoice
 
---Found a limitation in GHC!
--- invalidTransition = fromIssued ViewedInvoice { paid=True }
+-- PBT example - made possible by types!
 
--- TODO: PBT example - made possible by types!
+-- Property 1 - the result of the transition has to be equal to or bigger than the current state
+derive makeArbitrary ''Invoice
 
-calculateInvoiceTax :: Invoice -> Float
-calculateInvoiceTax invoice = 42
+-- verboseCheck prop_transition
+prop_transition before = let after = transition before
+                         in after >= before
 
 -- TODO: Show how type signature describes behavior AND enforces correctness
 
