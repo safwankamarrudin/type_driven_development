@@ -36,10 +36,10 @@ data Customer = Customer {
 -- Sum type
 --data Maybe a = Nothing | Just a
 
--- Look Ma, no NPE!
+-- Look Ma, no NPE! Make illegal states unrepresentable - Yaron Minsky
 isKey key dict = case (lookup key dict) of
                       Nothing -> False
-                      Just x  -> True
+                      Just _  -> True
 
 -- Recursive sum type
 data List a = Empty | Cons a (List a)
@@ -47,6 +47,8 @@ data List a = Empty | Cons a (List a)
 -- There are other types, like unit, etc, but we're not gonna talk about them today. Look them up.
 
 -- Domain modeling - on to something dear to us...
+-- Start with the enumeration
+-- Then add the record types and typeclasses
 data Invoice = IssuedInvoice    { emailed :: Bool }
                | EmailedInvoice { viewed :: Bool }
                | ViewedInvoice  { paid :: Bool }
@@ -68,22 +70,21 @@ fromViewed invoice = case (paid invoice) of
 --Found a limitation in GHC!
 -- invalidTransition = fromIssued ViewedInvoice { paid=True }
 
+-- Dependency injection the functional way!
 runMachine transition invoice = case (transition invoice) of
                                      PaidInvoice -> PaidInvoice
                                      _           -> runMachine transition invoice
 
 invoiceTransition invoice = case invoice of
-                                 IssuedInvoice i  -> fromIssued invoice
-                                 EmailedInvoice i -> fromEmailed invoice
-                                 ViewedInvoice i  -> fromViewed invoice
+                                 IssuedInvoice _  -> fromIssued invoice
+                                 EmailedInvoice _ -> fromEmailed invoice
+                                 ViewedInvoice _  -> fromViewed invoice
                                  --Commented out to show non-exhaustive pattern matching - PaidInvoice      -> PaidInvoice
 
--- PBT example - made possible by types!
+-- TODO: PBT example - made possible by types!
 
 calculateInvoiceTax :: Invoice -> Float
 calculateInvoiceTax invoice = 42
-
--- Conclusion: Type inference allows you to do domain design with very little friction
 
 -- TODO: Show how type signature describes behavior AND enforces correctness
 
@@ -91,3 +92,15 @@ calculateInvoiceTax invoice = 42
 
 
 -- 3 - GADT - Let's do more math! More. Moooooooree!
+
+
+
+-- Summary
+-- 1 - Types are not your enemy, types are your best friend.
+-- 2 - Type inference reduces "noise" and enables rapid prototyping without interrupting the flow
+-- 3 - ADT is a great tool for domain modeling and designing programs
+-- 4 - Type system doesn't replace tests, it complements them.
+-- When used wisely, it makes illegal states unrepresentable (NPE, list out of bounds, etc) and eliminates many unnecessary tests.
+-- When combined with PBT, it becomes even more indispensable.
+-- 5 - Types systems are getting better as type theory progresses.
+-- Dependent types allow behavioral correctness to be built into the type signature.
