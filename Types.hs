@@ -111,7 +111,10 @@ derive makeArbitrary ''Invoice
 prop_transition_result_is_equal_or_bigger before = let after = transition before
                                                    in after >= before
 
--- 3 - GADT - Let's do more algebra! More. Moooooooree!
+-- BAMM! 100% code coverage!
+-- We can go further by
+
+-- 3 - GADT
 
 -- Topic for another time as it's very abstract and I didn't have time to come up with a relevant example.
 -- Briefly mention the SafeList example.
