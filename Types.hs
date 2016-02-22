@@ -8,7 +8,14 @@ import Data.DeriveTH
 
 -- 0 - ghci -fwarn-incomplete-patterns / ghci -Wall (more strict)
 
+-- Intro.
+-- Let me get some boos. I wanna hear you boo me. I thrive on boos.
+-- I'm not going to talk about dynamic vs static today.
+-- I'm just going to show you how having a capable type system can improve quality and aid testing.
+
 -- 1 - Type inference - look Ma, no type signature!
+-- One of the common complaints for not having static typing is the type signature is noisy and hides the semantics.
+-- Meet Hindley-Milner.
 calculateTax amount taxRate = amount * taxRate
 
 -- NOTE: Not to be confused with dynamic typing
@@ -16,16 +23,18 @@ calculateTax amount taxRate = amount * taxRate
 -- Try calling it with a different type, say String
 calculateAfterTax amount tax = amount + tax
 
---getInvoiceAmount = calculateAfterTax 666 "abomination"
+-- This would work in some languages, I'm not gonna name names *cough*JavaScript*cough* -> 1 + "1" = "11"
+--getInvoiceAmount = calculateAfterTax 1 "1"
 
--- NOTE: Compiler FTW!
+-- Whaaaaaaa?
+-- Compiler FTW!
 
 -- You can add type signature as documentation
 calculateTaxWithTypes :: Num a => a -> a -> a
 --calculateTaxWithTypes :: Float -> Float -> Float
 calculateTaxWithTypes amount taxRate = amount * taxRate
 
-
+-- Often the type signature tells you exactly what it does, e.g. lookup function
 
 
 
@@ -43,25 +52,37 @@ data Customer = Customer {
 -- Sum type
 --data Maybe a = Nothing | Just a
 
--- Look Ma, no NPE! Make illegal states unrepresentable - Yaron Minsky
+-- Look Ma, no NPE!
 isKey key dict = case (lookup key dict) of
                       Nothing -> False
                       Just _  -> True
 
--- Recursive sum type
-data List a = Empty | Cons a (List a)
+-- Make illegal states unrepresentable - Yaron Minsky
+-- Use types to make it hard, if not impossible, to make mistakes
 
--- There are other types, like unit, etc, but we're not gonna talk about them today. Look them up.
+-- Recursive sum type
+-- Describes data structures in a succinct way
+data List a = EmptyList | Cons a (List a)
+
+data Tree a = EmptyNode | Node a (Tree a) (Tree a)
+
+traverse' EmptyNode           = []
+traverse' (Node a left right) = a : (traverse' left) ++ (traverse' right)
+
+-- There are other types, like unit, etc, but we're not gonna talk about them today.
 
 -- Domain modeling - on to something dear to us...
--- Start with the enumeration
--- Then add the record types and typeclasses
+-- Start with the enumeration. You can look at ADTs as enums on steroids.
+-- Then add the record types and
+-- Add Eq, Ord, typeclasses when doing PBT
 data Invoice = IssuedInvoice    { emailed :: Bool }
                | EmailedInvoice { viewed  :: Bool }
                | ViewedInvoice  { paid    :: Bool }
                | PaidInvoice
                deriving (Eq, Ord, Show)
 
+-- Define the state machine.
+-- We don't care what trans is at this point, all we know is it transitions an invoice from one state to the next.
 -- Dependency injection the functional way!
 runMachine trans invoice = case (trans invoice) of
                                 PaidInvoice -> PaidInvoice
@@ -73,10 +94,13 @@ transition invoice@(IssuedInvoice emailed) = case emailed of
 transition invoice@(EmailedInvoice viewed) = case viewed of
                                                   True  -> ViewedInvoice { paid=False }
                                                   False -> invoice
-transition invoice@(ViewedInvoice paid) = case paid of
-                                               True  -> PaidInvoice
-                                               False -> invoice
+transition invoice@(ViewedInvoice paid)    = case paid of
+                                                  True  -> PaidInvoice
+                                                  False -> invoice
+-- Intentionally leave this one out to show non-exhaustive pattern matching warning
 -- transition PaidInvoice = PaidInvoice
+
+-- Whaaaa? How can the compiler be so smart?!
 
 -- PBT example - made possible by types!
 
@@ -84,16 +108,13 @@ transition invoice@(ViewedInvoice paid) = case paid of
 derive makeArbitrary ''Invoice
 
 -- verboseCheck prop_transition
-prop_transition before = let after = transition before
-                         in after >= before
+prop_transition_result_is_equal_or_bigger before = let after = transition before
+                                                   in after >= before
 
--- TODO: Show how type signature describes behavior AND enforces correctness
+-- 3 - GADT - Let's do more algebra! More. Moooooooree!
 
-
-
-
--- 3 - GADT - Let's do more math! More. Moooooooree!
-
+-- Topic for another time as it's very abstract and I didn't have time to come up with a relevant example.
+-- Briefly mention the SafeList example.
 
 
 -- Summary
@@ -105,3 +126,4 @@ prop_transition before = let after = transition before
 -- When combined with PBT, it becomes even more indispensable.
 -- 5 - Types systems are getting better as type theory progresses.
 -- Dependent types allow behavioral correctness to be built into the type signature.
+-- Briefly show Agda and how you can have validation built into the type system, e.g. the tax rate has to be between 0 and 100.
