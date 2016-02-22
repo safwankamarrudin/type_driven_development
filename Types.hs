@@ -40,6 +40,8 @@ calculateTaxWithTypes amount taxRate = amount * taxRate
 
 -- 2 - ADT - Let's do some algebra!
 
+-- Introduce two main types
+
 -- Product type
 data Customer = Customer {
   firstName  :: String,
@@ -112,7 +114,8 @@ prop_transition_result_is_equal_or_bigger before = let after = transition before
                                                    in after >= before
 
 -- BAMM! 100% code coverage!
--- We can go further by
+-- We can go further by modifying the property to be more specific
+-- e.g. If status is true, then transition to the next state. Otherwise, stay on current.
 
 -- 3 - GADT
 
